@@ -27,7 +27,7 @@ class Transformer(nn.Module):
         padding_mask = padding_mask.view(batch_size, 1, 1, max_seq_len)
         padding_mask = padding_mask.expand(-1, -1, max_seq_len, -1).float()
         mask = padding_mask.masked_fill(padding_mask == 0, float('-inf')).masked_fill(padding_mask == 1, 0.0)
-        return padding_mask
+        return mask
 
     def lookahead_mask(self, batch_size, max_seq_len):
         lookahead_mask = torch.triu(torch.ones(max_seq_len, max_seq_len), diagonal=1) # this creates an upper triangular matrix
