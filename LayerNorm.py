@@ -12,8 +12,6 @@ class LayerNorm(nn.Module):
     def forward(self, input):
         input = input.to(torch.float32)
         mean = torch.mean(input, dim=2, keepdim=True)
-        x = input - mean
         std = torch.std(input, dim=2, keepdim=True)
-        input = x / (std + self.eps)
-
-        return input
+        input = ((input - mean)/(std - self.eps) * self.gamma) + self.beta
+        return input 
