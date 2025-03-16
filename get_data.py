@@ -1,20 +1,24 @@
 import pickle
+import pickle
 class data:
     def __init__(self):
-        path = "C:\machine learning\learningpython\english-german-both.pkl"
-        with open(path, "rb") as file:
-            self.data = pickle.load(file)
+        with open(r"/kaggle/input/datasetfortranslation/final_train_data.pkl", "rb") as f:
+            self.train_data = pickle.load(f)
+            # self.train_data = self.train_data[:1000]
+        with open(r"/kaggle/input/datasetfortranslation/test_data.pkl", "rb") as f:
+            self.test_data = pickle.load(f)
+            self.test_data = self.test_data[:300]
+        with open(r"/kaggle/input/datasetfortranslation/val_data.pkl", "rb") as f:
+            self.val_data = pickle.load(f)
+            self.val_data = self.val_data[:300]
+        with open(r"/kaggle/input/datasetfortranslation/final_target_train_data.pkl", "rb") as f:
+            self.target_train_data = pickle.load(f)
+        with open(r"/kaggle/input/datasetfortranslation/target_test_data.pkl", "rb") as f:
+            self.target_test_data = pickle.load(f)
+            self.target_test_data = self.target_test_data[:300]
+        with open(r"/kaggle/input/datasetfortranslation/target_val_data.pkl", "rb") as f:
+            self.target_val_data = pickle.load(f)
+            self.target_val_data = self.target_val_data[:300]
 
-    def get_data(self, no_examples):
-        input = []
-        output = []
-        for i in range(no_examples):
-            input.append(self.data[i][0])
-            output.append(self.data[i][1])
-        train_data = input[:1000]
-        test_data = input[1000:1300]
-        val_data = input[1300:]
-        target_train_data = output[:1000]
-        target_test_data = output[1000:1300]
-        target_val_data = output[1300:]
-        return input, output, train_data, val_data, test_data, target_train_data, target_val_data, target_test_data
+    def get_data(self):
+        return self.train_data, self.val_data, self.test_data, self.target_train_data, self.target_val_data, self.target_test_data
