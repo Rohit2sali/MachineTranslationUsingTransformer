@@ -14,7 +14,7 @@ The code is written in a beginner-friendly way, making it easy to understand and
 How to RUn
 
 Clone the Repository
-git clone https://github.com/Rohit2sali/TransformerusingPyTorch
+git clone https://github.com/Rohit2sali/MachineTranslationUsingTransformer
 
 Training - To train the model and save it:
 python train.py
