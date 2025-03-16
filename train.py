@@ -77,7 +77,7 @@ if __name__ == "__main__":
     n_epoch = 10
     batch_size = 32
 
-    with open("/kaggle/input/datasetfortranslation/vocab.pkl", "rb") as f:
+    with open("/all_data/vocab.pkl", "rb") as f:
         vocab = pickle.load(f)
 
     train_data, val_data, test_data, target_train_data, target_val_data, target_test_data = data().get_data()
