@@ -1,6 +1,6 @@
-Transformer using PyTorch
-This is the reimplementation of the paper "Attention is All You Need" using PyTorch.
-This repository contains the code of Transformer architecture for machine translation on the language English to German.
+This is repository is to solve the machine translation task using transformer. 
+The Transformer is implemented using python and PyTorch.
+This is the reimplementation of the paper "Attention is All You Need" .
 
 Components of Transformer
 Tokenizer
