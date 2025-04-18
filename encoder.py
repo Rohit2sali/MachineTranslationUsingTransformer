@@ -1,9 +1,8 @@
-from Attention import MultiHeadAttention
-from LayerNorm import LayerNorm
+import torch
 import torch.nn as nn
-
+from Attention import MultiHeadAttention
 class Encoder(nn.Module): 
-    def __init__(self, d_model, n_heads, fnn_hidden_dim, eps): # input must be str or list of str
+    def __init__(self, d_model, n_heads, fnn_hidden_dim): # input must be str or list of str
         super(Encoder, self).__init__()
         self.d_model = d_model
         self.n_heads = n_heads 
@@ -16,16 +15,16 @@ class Encoder(nn.Module):
             nn.Linear(fnn_hidden_dim, d_model)
         )
 
-        self.layernorm1 = LayerNorm(d_model, eps)
-        self.layernorm2 = LayerNorm(d_model, eps)
+        self.layernorm1 = nn.LayerNorm(d_model)
+        self.layernorm2 = nn.LayerNorm(d_model)
 
     def forward(self, embedding_output, padding_mask):
-        attention_output = self.attention.forward(embedding_output, embedding_output, embedding_output, padding_mask, lookahead_mask=None, n_heads=self.n_heads)
-        input = embedding_output + attention_output 
+        x = self.layernorm1(embedding_output)
+        attention_output = self.attention(x, x, x, padding_mask, lookahead_mask=None, n_heads=self.n_heads)
+        attention_output = embedding_output + attention_output
+        
+        layernorm_output = self.layernorm2(attention_output)
+        fnn_output = self.fnn(layernorm_output) 
 
-        layernorm_output = self.layernorm1.forward(input)
-        input = self.fnn(layernorm_output) 
-
-        input = input + layernorm_output
-        input = self.layernorm2.forward(input)
-        return input
+        output = fnn_output + attention_output
+        return output
