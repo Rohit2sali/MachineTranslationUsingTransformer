@@ -1,50 +1,56 @@
+
 import torch
-from collections import OrderedDict
 import torch.nn as nn
 import numpy as np
+from transformers import MarianTokenizer
+
+tokenizer = MarianTokenizer.from_pretrained("Helsinki-NLP/opus-mt-en-fr")
+tokenizer.add_special_tokens({'bos_token': '<sos>'})
 
 class Tokenization(nn.Module):
-    def __init__(self, vocab, max_seq_len): # only string or list of strings is acceptable
+    def __init__(self, max_seq_len):
         super(Tokenization, self).__init__()
         self.max_seq_len = max_seq_len
-        self.vocab = vocab
-        self.inv_vocab = {id : token for token, id in self.vocab.items()}
+        self.tokenizer = tokenizer
         
-    def process_sentence(self, input_text, generate):
-        token = input_text.lower().split()
-        if(len(token) > self.max_seq_len -2):
-            token = token[:self.max_seq_len-2] 
-        if generate:
-            token = token
-        else:
-            token = ["<sos>"] + token + ["<eos>"]
-        token_ids = [self.vocab.get(token, self.vocab["<unk>"]) for token in token]
-        token_ids = token_ids + [self.vocab["<pad>"]] * (self.max_seq_len - len(token_ids))
-        return token_ids
+    def get_vocab_len(self):
+        return len(self.tokenizer)
 
-    def tokenize(self, input_text, generate=False):
+    def get_tokenizer(self):
+        return self.tokenizer
+    
+    def process_sentence(self, input_sentences, layer):
+        token_ids = self.tokenizer.encode(input_sentences.lower(), return_tensors=None)
+        if layer == "decoder":
+            if(len(token_ids) > self.max_seq_len - 1):
+                token_ids = token_ids[:self.max_seq_len - 1]
+            token_ids = [self.tokenizer.bos_token_id] + token_ids 
+        else:
+            if(len(token_ids) > self.max_seq_len):
+                token_ids = token_ids[:self.max_seq_len]
+            token_ids = token_ids
+        
+        token_ids += [self.tokenizer.pad_token_id] * (self.max_seq_len - len(token_ids)) 
+        return token_ids
+    
+    def tokenize(self, input_text, layer):
         tokens = []
         if (type(input_text) == str or type(input_text) == np.str_):
-            tokens.append(self.process_sentence(input_text, generate))
+            tokens.append(self.process_sentence(input_text.lower(), layer))
         else:
             for sentence in input_text:
-                tokens.append(self.process_sentence(sentence, generate))
+                tokens.append(self.process_sentence(sentence.lower(), layer))
         tokens = torch.tensor(tokens)
         return tokens
     
-    def decode(self, token_ids, mode):
-        tokens = token_ids.tolist()
+    def decode(self, token_ids):
+        output_tokens = token_ids.tolist()
+        tokens = [token for token in output_tokens if token != self.tokenizer.pad_token_id]
         text = []
         if((type(tokens) == list) and (type(tokens[0]) != list)):
-            text.append([self.inv_vocab.get(id) for id in tokens])
+            text.append(self.tokenizer.decode(tokens, skip_special_tokens=True))
         else:
             for batch in tokens:
-                token = [self.inv_vocab.get(id, self.vocab["<unk>"]) for id in batch]
+                token = [self.tokenizer.decode(batch, skip_special_tokens=True)]
                 text.append(token) 
-        if mode == "generate":
-            text = text[0]
-            for i in text:
-                if i == "<sos>" or i == "<eos>" or i == "<unk>":
-                    text.remove(i)
-            text = " ".join(text)
         return text
