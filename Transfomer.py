@@ -1,25 +1,25 @@
-from tokenizer import Tokenization
-from embedding import word_embedding
-from encoder import Encoder
-from decoder import Decoder
 import torch
 import torch.nn as nn
+from encoder import Encoder
+from decoder import Decoder
+from embedding import word_embedding
+from tokenization import Tokenization
 
 class Transformer(nn.Module):
-    def __init__(self, vocab, max_seq_len, d_model, n_heads, n_layers, fnn_hidden_dim, eps):
+    def __init__(self, vocab_len, max_seq_len, d_model, n_heads, n_layers, fnn_hidden_dim):
         super(Transformer, self).__init__() 
         self.max_seq_len = max_seq_len
         self.d_model = d_model
-        self.vocab = vocab
-        self.embedding = word_embedding(len(self.vocab), max_seq_len, d_model)
-        self.encoders = nn.ModuleList([Encoder(d_model, n_heads, fnn_hidden_dim, eps) for _ in range(n_layers)])
-        self.decoders = nn.ModuleList([Decoder(d_model, n_heads, fnn_hidden_dim, eps) for _ in range(n_layers)])
-        self.linear = nn.Linear(self.d_model, len(self.vocab))
-
+        self.embedding = word_embedding(vocab_len, max_seq_len, d_model)
+        self.encoders = nn.ModuleList([Encoder(d_model, n_heads, fnn_hidden_dim) for _ in range(n_layers)])
+        self.decoders = nn.ModuleList([Decoder(d_model, n_heads, fnn_hidden_dim) for _ in range(n_layers)])
+        self.final_layernorm = nn.LayerNorm(d_model)
+        self.linear = nn.Linear(self.d_model, vocab_len)
+        self.tokenizer = Tokenization(max_seq_len).get_tokenizer()
+    
     def padding_mask(self, tokens):
-        padding_token = self.vocab["<pad>"]
         batch_size, max_seq_len = tokens.shape
-        padding_mask = (tokens != padding_token)
+        padding_mask = (tokens != self.tokenizer.pad_token_id)
         padding_mask = padding_mask.view(batch_size, 1, 1, max_seq_len)
         padding_mask = padding_mask.expand(-1, -1, max_seq_len, -1).float()
         mask = padding_mask.masked_fill(padding_mask == 0, float('-inf')).masked_fill(padding_mask == 1, 0.0)
@@ -35,45 +35,46 @@ class Transformer(nn.Module):
     def encoder_output(self, input_tokens):
         encoder_input = self.embedding.get_embedding(input_tokens)
         padding_mask = self.padding_mask(input_tokens)
+
         encoder_output = self.encoders[0].forward(encoder_input, padding_mask)
         for encoder in self.encoders[1:]:
             encoder_output = encoder.forward(encoder_output, padding_mask)
         return encoder_output, padding_mask
 
-    def generate(self, input_tokens, tokenizer):# input_tokens must be single sentence 
+    def generate(self, input_tokens):# input_tokens must be single sentence 
         encoder_output, encoder_padding_mask = self.encoder_output(input_tokens)
         batch_size, max_seq_len = input_tokens.shape
         lookahead_mask = self.lookahead_mask(batch_size, max_seq_len)
-        decoder_tokens = "<sos>"
-        target_tokens = tokenizer.tokenize(decoder_tokens, generate=True)
+        target_tokens = torch.full((batch_size, max_seq_len), self.tokenizer.pad_token_id, device=input_tokens.device)
+        target_tokens[:, 0] = self.tokenizer.bos_token_id
         for i in range(self.max_seq_len-1):
             decoder_padding_mask = self.padding_mask(target_tokens)
             decoder_input = self.embedding.get_embedding(target_tokens)
             decoder_output = self.decoders[0].forward(decoder_input, encoder_output, decoder_padding_mask, encoder_padding_mask, lookahead_mask)
             for decoder in self.decoders[1:]:
                 decoder_output = decoder.forward(decoder_output, encoder_output, decoder_padding_mask, encoder_padding_mask, lookahead_mask)
-            output = self.linear(decoder_output)
-            predictions = torch.nn.functional.softmax(output, dim=-1)
-            _, prediction = torch.max(predictions, dim=-1)
-            for i in prediction[0]:
-                if i == self.vocab["<eos>"]:
-                    return tokenizer.decode(prediction, mode="generate")
-            target_tokens = prediction
-        return tokenizer.decode(prediction, mode="generate")
+            output = self.linear(self.final_layernorm(decoder_output)) # (batch_size, max_seq_len, d_model)
+            next_token = torch.argmax(output[:, i, :], dim=-1)
+            target_tokens[0][i+1] = next_token
+            if (next_token == self.tokenizer.eos_token_id).any():
+                return self.tokenizer.decode(target_tokens, skip_special_tokens=True)
+
+        return self.tokenizer.decode(target_tokens, skip_special_tokens=True)
 
     def forward(self, input_tokens, target_tokens):
         encoder_output, encoder_padding_mask = self.encoder_output(input_tokens)
+        target_tokens = torch.where(target_tokens == self.tokenizer.eos_token_id, torch.tensor(self.tokenizer.pad_token_id), target_tokens)
          
         decoder_input = self.embedding.get_embedding(target_tokens)
         batch_size, max_seq_len = target_tokens.shape
         lookahead_mask = self.lookahead_mask(batch_size, max_seq_len)
         decoder_padding_mask = self.padding_mask(target_tokens)
 
-        decoder_output = self.decoders[0].forward(decoder_input, encoder_output, decoder_padding_mask, encoder_padding_mask, lookahead_mask)
+        decoder_output = self.decoders[0](decoder_input, encoder_output, decoder_padding_mask, encoder_padding_mask, lookahead_mask)
         for decoder in self.decoders[1:]:
-            decoder_output = decoder.forward(decoder_output, encoder_output, decoder_padding_mask, encoder_padding_mask, lookahead_mask)
-        
-        output = self.linear(decoder_output)
+            decoder_output = decoder(decoder_output, encoder_output, decoder_padding_mask, encoder_padding_mask, lookahead_mask)
+       
+        output = self.linear(self.final_layernorm(decoder_output))
         output = output.permute(0, 2, 1)
         
-        return output, self.vocab["<eos>"], self.vocab["<pad>"]
+        return output
