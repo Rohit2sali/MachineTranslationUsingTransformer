@@ -59,7 +59,6 @@ def train(input_tokens, target_tokens):
     model.train()
     with torch.cuda.amp.autocast():
         prediction = model(input_tokens, target_tokens)
-        one = torch.argmax(prediction.permute(0, 2, 1), dim=-1)
         loss = calculate_loss(prediction, target_tokens)
         accuracy = accuracy_fn(prediction, target_tokens)
     optimizer.zero_grad()
