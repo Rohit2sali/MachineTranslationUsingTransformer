@@ -19,5 +19,7 @@ Observation and changes during training.
 4. The model uses pre-layer normalization, but in original transformer paper "Attention is all you need" they have used post-layer normaliation. I had also used post-layer normalization but it was producing nan values in attention mechanism. So I swithed to pre-layer norm which worked well.
 
 Train the model - 
-If you have to train the model, you first have to give the path of files of your source language and target language, if the source and target languages are different from english and french then you will also have to change the tokenizer, which you can do in tokenization.py. After this you have to define the hyper parameters in train.py file if you want to change some and then run that file.
+If you have to train the model, you first have to give the path of files of your source language and target language, make sure that both languages should be stored as list of strings. If the source and target languages are different from english and french then you will have to change the tokenizer, which you can do in tokenization.py. After this you have to define the hyper parameters in train.py file if you want to change some and then run that file.
 
+The model is uploaded on huggingface library.
+You can download it from this link https://huggingface.co/Rohit2sali/transformer/blob/main/transformer.pth 
