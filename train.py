@@ -30,7 +30,7 @@ def accuracy_fn(prediction, target): # prediction : (batch_size, vocab, seq_len)
     return accuracy
 
 def calculate_loss(prediction, target_tokens):
-    criterion = nn.CrossEntropyLoss(ignore_index=3)
+    criterion = nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id)
     dummy_col = torch.full((target_tokens.shape[0], 1), tokenizer.pad_token_id, device=target_tokens.device)
     target_tokens = target_tokens[:, 1:]
     target_tokens = torch.cat((target_tokens, dummy_col), dim=1)
