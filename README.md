@@ -3,7 +3,7 @@ This repository is to solve the machine translation task using transformer. The 
 The model is trained on MultiUN dataset with 8 million examples for 4 epochs, the achieved BLEU score on test set of MultiUN is 
 BLEU = 75.06 100.0/88.9/62.5/57.1 (BP = 1.000 ratio = 1.000 hyp_len = 10 ref_len = 10).
 
-The transformer architecture uses pre-normalization layers for smooth training. The tokenizer used in this model is MarianTokenizer, this model is trained to translate english sentences to french, but if someone want to train it for any other language, they can. They only need to change the tokenizer and training data.
+The transformer architecture uses pre-normalization layers for smooth training. The tokenizer used in this model is MarianTokenizer, this model is trained to translate english sentences to french, but if someone want to train it for any other language, they can. They only need to change the tokenizer and training data. 
 
 The model is smaller in size compared to other translation models that are highly effective at translating sentences from various contexts, this model gives good translation on sentences from its training data or the data related to MultiUN data. Due to lack of hardware the model is only trained to handle sentences related to it's training data. But if you have the compute power then you can scale its parameters and improve its performance.
 The whole model is trained on kaggle T4 gpus from scratch.
