@@ -15,6 +15,10 @@ the model was not trained on this data, so to check it's performance on unseen d
 The model was also evaluated on the unseen data of paracrawl, 
 where it achieved the score BLEU = 20.45 90.6/41.9/13.3/3.4 (BP = 1.000 ratio = 1.000 hyp_len = 32 ref_len = 32)
 
+The model is saved at hugging face at this link, 
+
+If you want to fine tune this model for different dataset, then you can download the model from here, and then fine tune using the same training code. Just need to load the pre trained model and then train it on the data you want. 
+
 Things I learned while training this model.
 i) The transformer model is very sensitive, at first i was not adding special tokens like <sos> and <eos> for the encoders input,
    so due to that the model was not permorming well, because it was not understanding where the sentence starts or ends.
