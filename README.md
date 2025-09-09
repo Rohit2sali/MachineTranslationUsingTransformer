@@ -12,10 +12,10 @@ Open-Sourced: The pre-trained model is available on the Hugging Face Hub for any
 📊 Model Performance  
 The model was evaluated on two test sets it was not trained on to verify its generalization capabilities.  
 
-|Test Set (Unseen Data)|	BLEU Score |	Full Metric	|  
-|---|---|---|  
-|📝 OPUS-Wikipedia|	     | 20.45|	     | 90.6/41.9/13.3/3.4|	 
-|🌐 OPUS-ParaCrawl|      |18.14|	     |95.8/52.2/9.1/2.4	|  
+| Test Set (Unseen Data) | BLEU Score | Full Metric |
+|---|---|---|
+| 📝 OPUS-Wikipedia | 20.45 | `90.6/41.9/13.3/3.4` |
+| 🌐 ParaCrawl | 18.14 | `95.8/52.2/9.1/2.4` |
 
 ⚙️ Fine-Tuning  
 This model serves as a strong baseline for English-to-French translation and can be fine-tuned on a more specific domain (e.g., legal or medical texts).  
