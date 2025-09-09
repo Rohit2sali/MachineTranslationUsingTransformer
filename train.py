@@ -79,12 +79,12 @@ def test(test_data, target_test_data):
     return prediction, loss, acc
 
 if __name__ == "__main__":
-    max_seq_len = 90
+    max_seq_len = 64
     n_heads = 8
     d_model = 512
     fnn_hidden_dim = 2048
-    n_layers = 4
-    n_epoch = 4
+    n_layers = 6
+    n_epoch = 1
     batch_size = 128
 
     train_data = torch.load("/parainput.pt")
