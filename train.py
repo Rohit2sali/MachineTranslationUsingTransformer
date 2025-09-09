@@ -87,8 +87,15 @@ if __name__ == "__main__":
     n_epoch = 4
     batch_size = 128
 
-    train_data, target_train_data, val_data, target_val_data, test_data, target_test_data = get_data().forward()
+    train_data = torch.load("/parainput.pt")
+    target_train_data = torch.load("/paraoutput.pt")
 
+    val_data = torch.load("/val_input.pt")
+    target_val_data = torch.load("/val_output.pt")
+
+    test_data = torch.load("/test_input.pt")
+    target_test_data = torch.load("/test_output.pt")
+    
     indices = torch.randperm(train_data.shape[0])
     train_data = train_data[indices]
     target_train_data = target_train_data[indices]
